@@ -26,8 +26,8 @@ class ReportUpdater:
         self.hist_path = config.get("hist_file", "")
     
     def show_updater_dialog(self):
-        """Show the report updater dialog"""
-        
+        """Show the report updater dialog with modern, elegant UI"""
+
         # Validate historical file is set
         if not self.hist_path or not os.path.exists(self.hist_path):
             messagebox.showerror(
@@ -35,100 +35,164 @@ class ReportUpdater:
                 "Please set the Historical Data file in Settings before updating reports."
             )
             return
-        
+
+        # Modern color palette
+        colors = {
+            'bg': '#F8FAFB',           # Light blue-gray background
+            'card': '#FFFFFF',         # White cards
+            'primary': '#0F62FE',      # Modern blue
+            'primary_hover': '#0353E9',
+            'secondary': '#4589FF',    # Light blue
+            'success': '#24A148',      # Green
+            'text': '#161616',         # Dark text
+            'text_secondary': '#525252',
+            'border': '#E0E0E0',
+            'shadow': '#00000010'
+        }
+
         # Create dialog
         dialog = tk.Toplevel(self.parent)
-        dialog.title("Update Existing Report")
-        dialog.geometry("700x450")
-        dialog.configure(bg="#F5F9F3")
+        dialog.title("Update Report")
+        dialog.geometry("720x550")
+        dialog.configure(bg=colors['bg'])
         dialog.grab_set()
         dialog.transient(self.parent)
-        
-        # Header
-        header = tk.Frame(dialog, bg="#2D5016", height=70)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-        
-        tk.Label(header, text="🔄 Report Updater",
-                font=('Segoe UI', 18, 'bold'),
-                bg="#2D5016", fg="white").pack(pady=20)
-        
-        # Main content
-        content = tk.Frame(dialog, bg="#F5F9F3", padx=30, pady=20)
+
+        # Modern header with gradient effect
+        header_frame = tk.Frame(dialog, bg=colors['primary'], height=100)
+        header_frame.pack(fill="x")
+        header_frame.pack_propagate(False)
+
+        header_content = tk.Frame(header_frame, bg=colors['primary'])
+        header_content.pack(expand=True)
+
+        tk.Label(header_content, text="🔄",
+                font=('Segoe UI', 32),
+                bg=colors['primary'], fg="white").pack(pady=(5, 0))
+
+        tk.Label(header_content, text="Report Updater",
+                font=('Segoe UI', 22, 'bold'),
+                bg=colors['primary'], fg="white").pack()
+
+        tk.Label(header_content, text="Refresh your savings data with the latest information",
+                font=('Segoe UI', 10),
+                bg=colors['primary'], fg="#B8D7FF").pack(pady=(2, 5))
+
+        # Main scrollable content area
+        content = tk.Frame(dialog, bg=colors['bg'], padx=40, pady=25)
         content.pack(fill="both", expand=True)
-        
-        # Instructions
-        instructions = tk.Label(
-            content,
-            text="Update an existing savings report with the latest data from your historical file.\n"
-                 "This will refresh all quantities and savings without recreating the report.",
-            bg="#F5F9F3",
-            font=('Segoe UI', 10),
-            justify="left",
-            wraplength=620
-        )
-        instructions.pack(pady=(0, 20))
-        
-        # File selection
-        file_frame = tk.LabelFrame(content, text="Select Report to Update",
-                                  bg="#F5F9F3", font=('Segoe UI', 10, 'bold'),
-                                  padx=15, pady=15)
-        file_frame.pack(fill="x", pady=10)
-        
-        self.file_label = tk.Label(file_frame, text="No file selected",
-                                   bg="#F5F9F3", fg="gray",
-                                   font=('Segoe UI', 9))
-        self.file_label.pack(pady=5)
-        
-        tk.Button(file_frame, text="📂 Browse for Report",
-                 command=lambda: self.select_report(dialog),
-                 bg="#6B9F3E", fg="white",
-                 font=('Segoe UI', 10, 'bold'),
-                 padx=20, pady=8,
-                 cursor="hand2").pack(pady=5)
-        
-        # Options
-        options_frame = tk.LabelFrame(content, text="Update Options",
-                                     bg="#F5F9F3", font=('Segoe UI', 10, 'bold'),
-                                     padx=15, pady=15)
-        options_frame.pack(fill="x", pady=10)
-        
+
+        # File selection card
+        file_card = tk.Frame(content, bg=colors['card'], relief='flat', bd=0)
+        file_card.pack(fill="x", pady=(0, 15))
+
+        # Card shadow effect
+        file_card_inner = tk.Frame(file_card, bg=colors['card'], padx=25, pady=20)
+        file_card_inner.pack(fill="x", padx=1, pady=1)
+
+        tk.Label(file_card_inner, text="📁 Select Report File",
+                font=('Segoe UI', 12, 'bold'),
+                bg=colors['card'], fg=colors['text']).pack(anchor="w", pady=(0, 10))
+
+        # File path display
+        file_display_frame = tk.Frame(file_card_inner, bg='#F4F4F4', relief='flat')
+        file_display_frame.pack(fill="x", pady=(0, 12))
+
+        self.file_label = tk.Label(file_display_frame, text="No file selected",
+                                   bg='#F4F4F4', fg=colors['text_secondary'],
+                                   font=('Segoe UI', 10), anchor='w', padx=15, pady=12)
+        self.file_label.pack(fill="x")
+
+        # Browse button
+        browse_btn = tk.Button(file_card_inner, text="Browse Files",
+                              command=lambda: self.select_report(dialog),
+                              bg=colors['secondary'], fg="white",
+                              font=('Segoe UI', 10, 'bold'),
+                              relief='flat', bd=0,
+                              padx=25, pady=10,
+                              cursor="hand2",
+                              activebackground=colors['primary'])
+        browse_btn.pack(anchor="w")
+
+        # Options card
+        options_card = tk.Frame(content, bg=colors['card'], relief='flat', bd=0)
+        options_card.pack(fill="x", pady=(0, 15))
+
+        options_card_inner = tk.Frame(options_card, bg=colors['card'], padx=25, pady=20)
+        options_card_inner.pack(fill="x", padx=1, pady=1)
+
+        tk.Label(options_card_inner, text="⚙️ Update Mode",
+                font=('Segoe UI', 12, 'bold'),
+                bg=colors['card'], fg=colors['text']).pack(anchor="w", pady=(0, 12))
+
         self.update_all_var = tk.BooleanVar(value=True)
         self.update_empty_var = tk.BooleanVar(value=False)
-        
-        tk.Radiobutton(options_frame, text="Update ALL months (recommended)",
+
+        # Radio button options
+        radio_frame1 = tk.Frame(options_card_inner, bg=colors['card'])
+        radio_frame1.pack(fill="x", pady=3)
+
+        tk.Radiobutton(radio_frame1, text="Update ALL months",
                       variable=self.update_all_var, value=True,
-                      bg="#F5F9F3", font=('Segoe UI', 9),
-                      command=lambda: self.update_empty_var.set(False)).pack(anchor="w", pady=2)
-        
-        tk.Radiobutton(options_frame, text="Update only empty months",
+                      bg=colors['card'], fg=colors['text'],
+                      font=('Segoe UI', 10),
+                      activebackground=colors['card'],
+                      selectcolor=colors['card'],
+                      command=lambda: self.update_empty_var.set(False)).pack(side="left")
+
+        tk.Label(radio_frame1, text="(Recommended - Refreshes all data)",
+                bg=colors['card'], fg=colors['text_secondary'],
+                font=('Segoe UI', 9, 'italic')).pack(side="left", padx=(8, 0))
+
+        radio_frame2 = tk.Frame(options_card_inner, bg=colors['card'])
+        radio_frame2.pack(fill="x", pady=3)
+
+        tk.Radiobutton(radio_frame2, text="Update only empty months",
                       variable=self.update_empty_var, value=True,
-                      bg="#F5F9F3", font=('Segoe UI', 9),
-                      command=lambda: self.update_all_var.set(False)).pack(anchor="w", pady=2)
-        
-        # Status
-        self.status_label = tk.Label(content, text="Ready to update",
-                                     bg="#F5F9F3", fg="#2D5016",
-                                     font=('Segoe UI', 9, 'italic'))
-        self.status_label.pack(pady=10)
-        
-        # Buttons
-        btn_frame = tk.Frame(content, bg="#F5F9F3")
-        btn_frame.pack(pady=10)
-        
-        tk.Button(btn_frame, text="▶️ Update Report",
-                 command=lambda: self.run_update(dialog),
-                 bg="#2D5016", fg="white",
-                 font=('Segoe UI', 11, 'bold'),
-                 padx=30, pady=10,
-                 cursor="hand2").pack(side="left", padx=5)
-        
-        tk.Button(btn_frame, text="Cancel",
-                 command=dialog.destroy,
-                 bg="#999999", fg="white",
-                 font=('Segoe UI', 10),
-                 padx=20, pady=10,
-                 cursor="hand2").pack(side="left", padx=5)
+                      bg=colors['card'], fg=colors['text'],
+                      font=('Segoe UI', 10),
+                      activebackground=colors['card'],
+                      selectcolor=colors['card'],
+                      command=lambda: self.update_all_var.set(False)).pack(side="left")
+
+        tk.Label(radio_frame2, text="(Only fills in missing data)",
+                bg=colors['card'], fg=colors['text_secondary'],
+                font=('Segoe UI', 9, 'italic')).pack(side="left", padx=(8, 0))
+
+        # Status indicator
+        status_frame = tk.Frame(content, bg='#E8F5E9', relief='flat')
+        status_frame.pack(fill="x", pady=(0, 20))
+
+        self.status_label = tk.Label(status_frame, text="✓ Ready to update",
+                                     bg='#E8F5E9', fg=colors['success'],
+                                     font=('Segoe UI', 10), pady=12)
+        self.status_label.pack()
+
+        # Action buttons
+        btn_frame = tk.Frame(content, bg=colors['bg'])
+        btn_frame.pack(pady=5)
+
+        # Update button
+        update_btn = tk.Button(btn_frame, text="Update Report",
+                              command=lambda: self.run_update(dialog),
+                              bg=colors['primary'], fg="white",
+                              font=('Segoe UI', 11, 'bold'),
+                              relief='flat', bd=0,
+                              padx=35, pady=12,
+                              cursor="hand2",
+                              activebackground=colors['primary_hover'])
+        update_btn.pack(side="left", padx=5)
+
+        # Cancel button
+        cancel_btn = tk.Button(btn_frame, text="Cancel",
+                              command=dialog.destroy,
+                              bg='#E0E0E0', fg=colors['text'],
+                              font=('Segoe UI', 10),
+                              relief='flat', bd=0,
+                              padx=30, pady=12,
+                              cursor="hand2",
+                              activebackground='#D0D0D0')
+        cancel_btn.pack(side="left", padx=5)
     
     def select_report(self, dialog):
         """Select existing report file"""
@@ -137,39 +201,65 @@ class ReportUpdater:
             filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
             parent=dialog
         )
-        
+
         if path:
             self.report_path = path
-            self.file_label.config(text=os.path.basename(path), fg="black")
-            self.status_label.config(text=f"Report loaded: {os.path.basename(path)}")
-    
+            filename = os.path.basename(path)
+            # Truncate long filenames
+            display_name = filename if len(filename) <= 50 else filename[:47] + "..."
+            self.file_label.config(text=display_name, fg='#161616')
+            self.status_label.config(
+                text=f"✓ File selected: {filename}",
+                bg='#E8F5E9',
+                fg='#24A148'
+            )
+
     def run_update(self, dialog):
         """Execute the report update"""
-        
+
         if not self.report_path:
-            messagebox.showerror("No File", "Please select a report to update.", parent=dialog)
+            messagebox.showerror("No File Selected",
+                               "Please select a report file to update.",
+                               parent=dialog)
             return
-        
-        self.status_label.config(text="Updating report...")
+
+        # Show processing status
+        self.status_label.config(
+            text="⏳ Processing update... Please wait",
+            bg='#FFF4E5',
+            fg='#E87500'
+        )
         dialog.update()
-        
+
         try:
             success = self.update_report(self.update_all_var.get())
-            
+
             if success:
                 messagebox.showinfo(
-                    "Update Complete",
-                    f"Report updated successfully!\n\n"
-                    f"Updated file saved with '_Updated' suffix.",
+                    "✓ Update Complete",
+                    "Your report has been successfully updated!\n\n"
+                    "The updated file has been saved with an '_Updated' suffix "
+                    "and timestamp in the same directory.",
                     parent=dialog
                 )
                 dialog.destroy()
             else:
-                self.status_label.config(text="Update failed - see error message")
-                
+                self.status_label.config(
+                    text="✗ Update failed - check error message above",
+                    bg='#FFE8E8',
+                    fg='#DA1E28'
+                )
+
         except Exception as e:
-            messagebox.showerror("Update Error", f"Failed to update report:\n{str(e)}", parent=dialog)
-            self.status_label.config(text="Update failed")
+            error_msg = str(e)
+            messagebox.showerror("Update Error",
+                               f"Failed to update report:\n\n{error_msg}",
+                               parent=dialog)
+            self.status_label.config(
+                text="✗ Update failed - see error details",
+                bg='#FFE8E8',
+                fg='#DA1E28'
+            )
     
     def update_report(self, update_all=True):
         """
@@ -246,33 +336,85 @@ class ReportUpdater:
         month_cols = {}  # {column_index: month_name}
         qty_section_start = None
         save_section_start = None
-        
+
+        print("\nScanning for sections...")
         for row_idx in range(1, ws.max_row + 1):
-            cell_value = ws.cell(row=row_idx, column=1).value
-            
-            if cell_value:
-                if "QUANTITIES" in str(cell_value).upper():
+            # Check first few columns for section headers (handles merged cells)
+            cell_text = None
+            for col_check in range(1, min(5, ws.max_column + 1)):
+                cell_value = ws.cell(row=row_idx, column=col_check).value
+                if cell_value and str(cell_value).strip():
+                    cell_text = str(cell_value).strip().upper()
+                    break
+
+            if cell_text:
+                # More flexible pattern matching
+                if "QUANTITIES" in cell_text or "QUANTITY" in cell_text:
                     qty_section_start = row_idx + 1  # Header is next row
-                elif "SAVINGS" in str(cell_value).upper() and "REALIZED" in str(cell_value).upper():
+                    print(f"  Found QUANTITIES section at row {row_idx}")
+                elif ("SAVINGS" in cell_text and "REALIZED" in cell_text) or "REALIZED SAVINGS" in cell_text:
                     save_section_start = row_idx + 1
-        
+                    print(f"  Found SAVINGS section at row {row_idx}")
+
+        if not qty_section_start or not save_section_start:
+            print(f"  ⚠️ Section detection failed: qty_section_start={qty_section_start}, save_section_start={save_section_start}")
+            messagebox.showerror("Parse Error",
+                "Could not find QUANTITIES and SAVINGS sections.\n\n"
+                "Please ensure your report has:\n"
+                "- A 'QUANTITIES RECEIVED' section\n"
+                "- A 'REALIZED SAVINGS' section")
+            return False
+
         # Get month columns from quantities header
         if qty_section_start:
             for col_idx in range(1, ws.max_column + 1):
                 header = ws.cell(row=qty_section_start, column=col_idx).value
-                if header and header not in ["Product", "Total Qty", "Total"]:
+                if header and str(header).strip() not in ["Product", "Total Qty", "Total", ""]:
                     # This is a month column (e.g., "JAN 25", "FEB 25")
-                    month_cols[col_idx] = str(header)
-        
+                    month_cols[col_idx] = str(header).strip()
+
         print(f"Found {len(month_cols)} month columns: {list(month_cols.values())}")
-        
-        if not qty_section_start or not save_section_start:
-            messagebox.showerror("Parse Error", "Could not find QUANTITIES and SAVINGS sections.")
-            return False
-        
+
+        # Collect all unique months from ALL products first
+        print("\nCollecting all months from historical data...")
+        all_required_months = set()
+        for product_info in products:
+            product = product_info['product_code']
+            product_hist = hist[hist["ProductCode"] == product].copy()
+
+            if not product_hist.empty:
+                product_hist["YearMonth"] = product_hist["ReceiptDate"].dt.to_period("M")
+                monthly_data = product_hist.groupby("YearMonth").agg(
+                    Qty=("BaseRcvdQty", "sum")
+                ).reset_index()
+
+                for period in monthly_data["YearMonth"]:
+                    month_abbr = calendar.month_abbr[period.month].upper()
+                    year_short = str(period.year)[-2:]
+                    month_label = f"{month_abbr} {year_short}"
+                    all_required_months.add(month_label)
+
+        print(f"Found {len(all_required_months)} unique months in historical data")
+
+        # Ensure all required month columns exist BEFORE processing
+        if all_required_months:
+            print("Ensuring all month columns exist...")
+            for month_label in sorted(all_required_months):
+                self.ensure_month_column(ws, qty_section_start, month_label)
+                self.ensure_month_column(ws, save_section_start, month_label)
+
+            # Rebuild month_cols mapping after all insertions
+            month_cols = {}
+            for col_idx in range(1, ws.max_column + 1):
+                header = ws.cell(row=qty_section_start, column=col_idx).value
+                if header and str(header).strip() not in ["Product", "Total Qty", "Total", ""]:
+                    month_cols[col_idx] = str(header).strip()
+
+            print(f"Final month columns: {list(month_cols.values())}")
+
         # Update each product's data
         updates_made = 0
-        
+
         for product_info in products:
             product = product_info['product_code']
             compare = product_info['compare_code']
@@ -296,8 +438,9 @@ class ReportUpdater:
             
             # Calculate savings per unit
             savings_per_unit = old_price - new_price
-            
+
             # Update each month column
+            update_empty = not update_all
             for col_idx, month_name in month_cols.items():
                 # Parse month name (e.g., "JAN 25" -> 2025-01)
                 try:
@@ -308,46 +451,39 @@ class ReportUpdater:
                 except:
                     print(f"  ⚠️ Could not parse month: {month_name}")
                     continue
-                
-                # Check if we should update this month
-                should_update = update_all
-                
-                if not update_all:
-                    # Only update if cells are empty
+
+                # Get data for this month
+                month_rows = monthly_data[monthly_data["YearMonth"] == target_period]
+
+                if not month_rows.empty:
+                    qty = month_rows.iloc[0]["Qty"]
+                    savings = qty * savings_per_unit
+
+                    # Update quantities section
                     qty_row = self.find_product_row(ws, product, qty_section_start)
                     if qty_row:
-                        current_val = ws.cell(row=qty_row, column=col_idx).value
-                        should_update = (current_val is None or current_val == 0 or current_val == "")
-                
-                if should_update:
-                    # Get data for this month
-                    month_rows = monthly_data[monthly_data["YearMonth"] == target_period]
-                    
-                    if not month_rows.empty:
-                        qty = month_rows.iloc[0]["Qty"]
-                        savings = qty * savings_per_unit
-                        
-                        # Update quantities section
-                        qty_row = self.find_product_row(ws, product, qty_section_start)
-                        if qty_row:
-                            ws.cell(row=qty_row, column=col_idx, value=round(qty, 2))
-                            updates_made += 1
-                        
-                        # Update savings section
-                        save_row = self.find_product_row(ws, product, save_section_start)
-                        if save_row:
-                            ws.cell(row=save_row, column=col_idx, value=round(savings, 2))
-                        
-                        print(f"  Updated {month_name}: Qty={qty:.2f}, Savings=${savings:.2f}")
-                    else:
-                        # No data for this month - set to 0
-                        qty_row = self.find_product_row(ws, product, qty_section_start)
-                        if qty_row:
-                            ws.cell(row=qty_row, column=col_idx, value=0)
-                        
-                        save_row = self.find_product_row(ws, product, save_section_start)
-                        if save_row:
-                            ws.cell(row=save_row, column=col_idx, value=0)
+                        qty_cell = ws.cell(row=qty_row, column=col_idx)
+                        self.safe_write(qty_cell, round(qty, 2), update_empty)
+                        updates_made += 1
+
+                    # Update savings section
+                    save_row = self.find_product_row(ws, product, save_section_start)
+                    if save_row:
+                        save_cell = ws.cell(row=save_row, column=col_idx)
+                        self.safe_write(save_cell, round(savings, 2), update_empty)
+
+                    print(f"  Updated {month_name}: Qty={qty:.2f}, Savings=${savings:.2f}")
+                else:
+                    # No data for this month - set to 0
+                    qty_row = self.find_product_row(ws, product, qty_section_start)
+                    if qty_row:
+                        qty_cell = ws.cell(row=qty_row, column=col_idx)
+                        self.safe_write(qty_cell, 0, update_empty)
+
+                    save_row = self.find_product_row(ws, product, save_section_start)
+                    if save_row:
+                        save_cell = ws.cell(row=save_row, column=col_idx)
+                        self.safe_write(save_cell, 0, update_empty)
         
         # Recalculate totals for all columns
         print("\nRecalculating totals...")
@@ -370,18 +506,142 @@ class ReportUpdater:
         
         return True
     
+    def safe_write(self, cell, value, update_empty):
+        """
+        Safely write to a cell, skipping formulas and respecting update_empty flag
+
+        Args:
+            cell: The openpyxl cell object
+            value: The value to write
+            update_empty: If True, only write if cell is empty
+        """
+        # Skip formulas
+        if cell.data_type == "f":
+            return
+
+        # Current content
+        current = cell.value
+
+        # Apply update_empty rule
+        if update_empty and current not in [None, "", " ", 0, "0"]:
+            return
+
+        cell.value = value
+
+    def ensure_month_column(self, ws, header_row, month_label):
+        """
+        Ensure the month column exists in the header_row.
+        Return its 1-based column index.
+        If missing:
+          - Insert at correct chronological index
+          - Clone formatting from nearest month column
+
+        Args:
+            ws: Worksheet object
+            header_row: Row number containing month headers
+            month_label: Month label to ensure (e.g., "JAN 25")
+
+        Returns:
+            Column index (1-based) for the month
+        """
+        # Parse target month
+        try:
+            month_abbr, year_short = month_label.split()
+            target_month_num = list(calendar.month_abbr).index(month_abbr.upper())
+            target_year = 2000 + int(year_short)
+        except:
+            print(f"  ⚠️ Could not parse month label: {month_label}")
+            return None
+
+        # Scan existing month columns
+        month_columns = {}  # {col_idx: (month_num, year)}
+        existing_col = None
+
+        for col_idx in range(1, ws.max_column + 1):
+            header = ws.cell(row=header_row, column=col_idx).value
+            if header:
+                header_str = str(header).strip()
+
+                # Check if this is our target month
+                if header_str == month_label:
+                    existing_col = col_idx
+                    break
+
+                # Try to parse as month column
+                try:
+                    parts = header_str.split()
+                    if len(parts) == 2:
+                        m_abbr, y_short = parts
+                        m_num = list(calendar.month_abbr).index(m_abbr.upper())
+                        y = 2000 + int(y_short)
+                        month_columns[col_idx] = (m_num, y)
+                except:
+                    pass
+
+        # If month exists, return its column
+        if existing_col:
+            return existing_col
+
+        # Month doesn't exist - need to insert it
+        # Find correct chronological position
+        insert_at = None
+        template_col = None
+
+        for col_idx in sorted(month_columns.keys()):
+            m_num, y = month_columns[col_idx]
+
+            # If current column is later than target, insert before it
+            if (y > target_year) or (y == target_year and m_num > target_month_num):
+                insert_at = col_idx
+                template_col = col_idx
+                break
+            else:
+                # This column is earlier, use as template
+                template_col = col_idx
+
+        # If no later column found, insert after last month column
+        if insert_at is None and month_columns:
+            last_col = max(month_columns.keys())
+            insert_at = last_col + 1
+            template_col = last_col
+        elif insert_at is None:
+            # No month columns found at all - insert after "Product" column
+            insert_at = 2
+            template_col = None
+
+        # Insert the new column
+        ws.insert_cols(insert_at)
+
+        # Set header
+        ws.cell(row=header_row, column=insert_at, value=month_label)
+
+        # Clone formatting from template column if available
+        if template_col:
+            for row_idx in range(1, ws.max_row + 1):
+                source_cell = ws.cell(row=row_idx, column=template_col)
+                target_cell = ws.cell(row=row_idx, column=insert_at)
+
+                target_cell.font = source_cell.font.copy()
+                target_cell.fill = source_cell.fill.copy()
+                target_cell.border = source_cell.border.copy()
+                target_cell.alignment = source_cell.alignment.copy()
+                target_cell.number_format = source_cell.number_format
+
+        print(f"  ✓ Inserted new month column: {month_label} at position {insert_at}")
+        return insert_at
+
     def find_product_row(self, ws, product_code, section_start):
         """Find the row for a specific product in a section"""
         for row_idx in range(section_start + 1, ws.max_row + 1):
             cell_value = ws.cell(row=row_idx, column=1).value
-            
+
             # Stop at section end
             if not cell_value or "TOTAL" in str(cell_value).upper():
                 break
-            
+
             if str(cell_value).strip() == str(product_code).strip():
                 return row_idx
-        
+
         return None
     
     def recalculate_totals(self, ws, month_cols, qty_start, save_start):
