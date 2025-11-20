@@ -296,8 +296,31 @@ class ReportUpdater:
             
             # Calculate savings per unit
             savings_per_unit = old_price - new_price
-            
+
+            # Collect all unique months from historical data for this product
+            all_months = set()
+            for period in monthly_data["YearMonth"]:
+                month_abbr = calendar.month_abbr[period.month].upper()
+                year_short = str(period.year)[-2:]
+                month_label = f"{month_abbr} {year_short}"
+                all_months.add(month_label)
+
+            # Ensure all required month columns exist
+            for month_label in all_months:
+                # Ensure column exists in QUANTITIES section
+                self.ensure_month_column(ws, qty_section_start, month_label)
+                # Ensure column exists in SAVINGS section
+                self.ensure_month_column(ws, save_section_start, month_label)
+
+            # Rebuild month_cols mapping after potential insertions
+            month_cols = {}
+            for col_idx in range(1, ws.max_column + 1):
+                header = ws.cell(row=qty_section_start, column=col_idx).value
+                if header and header not in ["Product", "Total Qty", "Total"]:
+                    month_cols[col_idx] = str(header)
+
             # Update each month column
+            update_empty = not update_all
             for col_idx, month_name in month_cols.items():
                 # Parse month name (e.g., "JAN 25" -> 2025-01)
                 try:
@@ -308,46 +331,39 @@ class ReportUpdater:
                 except:
                     print(f"  ⚠️ Could not parse month: {month_name}")
                     continue
-                
-                # Check if we should update this month
-                should_update = update_all
-                
-                if not update_all:
-                    # Only update if cells are empty
+
+                # Get data for this month
+                month_rows = monthly_data[monthly_data["YearMonth"] == target_period]
+
+                if not month_rows.empty:
+                    qty = month_rows.iloc[0]["Qty"]
+                    savings = qty * savings_per_unit
+
+                    # Update quantities section
                     qty_row = self.find_product_row(ws, product, qty_section_start)
                     if qty_row:
-                        current_val = ws.cell(row=qty_row, column=col_idx).value
-                        should_update = (current_val is None or current_val == 0 or current_val == "")
-                
-                if should_update:
-                    # Get data for this month
-                    month_rows = monthly_data[monthly_data["YearMonth"] == target_period]
-                    
-                    if not month_rows.empty:
-                        qty = month_rows.iloc[0]["Qty"]
-                        savings = qty * savings_per_unit
-                        
-                        # Update quantities section
-                        qty_row = self.find_product_row(ws, product, qty_section_start)
-                        if qty_row:
-                            ws.cell(row=qty_row, column=col_idx, value=round(qty, 2))
-                            updates_made += 1
-                        
-                        # Update savings section
-                        save_row = self.find_product_row(ws, product, save_section_start)
-                        if save_row:
-                            ws.cell(row=save_row, column=col_idx, value=round(savings, 2))
-                        
-                        print(f"  Updated {month_name}: Qty={qty:.2f}, Savings=${savings:.2f}")
-                    else:
-                        # No data for this month - set to 0
-                        qty_row = self.find_product_row(ws, product, qty_section_start)
-                        if qty_row:
-                            ws.cell(row=qty_row, column=col_idx, value=0)
-                        
-                        save_row = self.find_product_row(ws, product, save_section_start)
-                        if save_row:
-                            ws.cell(row=save_row, column=col_idx, value=0)
+                        qty_cell = ws.cell(row=qty_row, column=col_idx)
+                        self.safe_write(qty_cell, round(qty, 2), update_empty)
+                        updates_made += 1
+
+                    # Update savings section
+                    save_row = self.find_product_row(ws, product, save_section_start)
+                    if save_row:
+                        save_cell = ws.cell(row=save_row, column=col_idx)
+                        self.safe_write(save_cell, round(savings, 2), update_empty)
+
+                    print(f"  Updated {month_name}: Qty={qty:.2f}, Savings=${savings:.2f}")
+                else:
+                    # No data for this month - set to 0
+                    qty_row = self.find_product_row(ws, product, qty_section_start)
+                    if qty_row:
+                        qty_cell = ws.cell(row=qty_row, column=col_idx)
+                        self.safe_write(qty_cell, 0, update_empty)
+
+                    save_row = self.find_product_row(ws, product, save_section_start)
+                    if save_row:
+                        save_cell = ws.cell(row=save_row, column=col_idx)
+                        self.safe_write(save_cell, 0, update_empty)
         
         # Recalculate totals for all columns
         print("\nRecalculating totals...")
@@ -370,18 +386,142 @@ class ReportUpdater:
         
         return True
     
+    def safe_write(self, cell, value, update_empty):
+        """
+        Safely write to a cell, skipping formulas and respecting update_empty flag
+
+        Args:
+            cell: The openpyxl cell object
+            value: The value to write
+            update_empty: If True, only write if cell is empty
+        """
+        # Skip formulas
+        if cell.data_type == "f":
+            return
+
+        # Current content
+        current = cell.value
+
+        # Apply update_empty rule
+        if update_empty and current not in [None, "", " ", 0, "0"]:
+            return
+
+        cell.value = value
+
+    def ensure_month_column(self, ws, header_row, month_label):
+        """
+        Ensure the month column exists in the header_row.
+        Return its 1-based column index.
+        If missing:
+          - Insert at correct chronological index
+          - Clone formatting from nearest month column
+
+        Args:
+            ws: Worksheet object
+            header_row: Row number containing month headers
+            month_label: Month label to ensure (e.g., "JAN 25")
+
+        Returns:
+            Column index (1-based) for the month
+        """
+        # Parse target month
+        try:
+            month_abbr, year_short = month_label.split()
+            target_month_num = list(calendar.month_abbr).index(month_abbr.upper())
+            target_year = 2000 + int(year_short)
+        except:
+            print(f"  ⚠️ Could not parse month label: {month_label}")
+            return None
+
+        # Scan existing month columns
+        month_columns = {}  # {col_idx: (month_num, year)}
+        existing_col = None
+
+        for col_idx in range(1, ws.max_column + 1):
+            header = ws.cell(row=header_row, column=col_idx).value
+            if header:
+                header_str = str(header).strip()
+
+                # Check if this is our target month
+                if header_str == month_label:
+                    existing_col = col_idx
+                    break
+
+                # Try to parse as month column
+                try:
+                    parts = header_str.split()
+                    if len(parts) == 2:
+                        m_abbr, y_short = parts
+                        m_num = list(calendar.month_abbr).index(m_abbr.upper())
+                        y = 2000 + int(y_short)
+                        month_columns[col_idx] = (m_num, y)
+                except:
+                    pass
+
+        # If month exists, return its column
+        if existing_col:
+            return existing_col
+
+        # Month doesn't exist - need to insert it
+        # Find correct chronological position
+        insert_at = None
+        template_col = None
+
+        for col_idx in sorted(month_columns.keys()):
+            m_num, y = month_columns[col_idx]
+
+            # If current column is later than target, insert before it
+            if (y > target_year) or (y == target_year and m_num > target_month_num):
+                insert_at = col_idx
+                template_col = col_idx
+                break
+            else:
+                # This column is earlier, use as template
+                template_col = col_idx
+
+        # If no later column found, insert after last month column
+        if insert_at is None and month_columns:
+            last_col = max(month_columns.keys())
+            insert_at = last_col + 1
+            template_col = last_col
+        elif insert_at is None:
+            # No month columns found at all - insert after "Product" column
+            insert_at = 2
+            template_col = None
+
+        # Insert the new column
+        ws.insert_cols(insert_at)
+
+        # Set header
+        ws.cell(row=header_row, column=insert_at, value=month_label)
+
+        # Clone formatting from template column if available
+        if template_col:
+            for row_idx in range(1, ws.max_row + 1):
+                source_cell = ws.cell(row=row_idx, column=template_col)
+                target_cell = ws.cell(row=row_idx, column=insert_at)
+
+                target_cell.font = source_cell.font.copy()
+                target_cell.fill = source_cell.fill.copy()
+                target_cell.border = source_cell.border.copy()
+                target_cell.alignment = source_cell.alignment.copy()
+                target_cell.number_format = source_cell.number_format
+
+        print(f"  ✓ Inserted new month column: {month_label} at position {insert_at}")
+        return insert_at
+
     def find_product_row(self, ws, product_code, section_start):
         """Find the row for a specific product in a section"""
         for row_idx in range(section_start + 1, ws.max_row + 1):
             cell_value = ws.cell(row=row_idx, column=1).value
-            
+
             # Stop at section end
             if not cell_value or "TOTAL" in str(cell_value).upper():
                 break
-            
+
             if str(cell_value).strip() == str(product_code).strip():
                 return row_idx
-        
+
         return None
     
     def recalculate_totals(self, ws, month_cols, qty_start, save_start):
