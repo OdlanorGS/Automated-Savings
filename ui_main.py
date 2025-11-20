@@ -229,63 +229,98 @@ class ProjectManager:
 
 
 class ModernStyle:
-    """Professional color scheme and styling"""
-    PRIMARY = "#2D5016"
-    SECONDARY = "#4A7C2C"
-    ACCENT = "#6B9F3E"
-    LIGHT = "#F5F9F3"
-    WHITE = "#FFFFFF"
-    TEXT_DARK = "#2C2C2C"
-    TEXT_LIGHT = "#666666"
-    BORDER = "#D0E0C8"
+    """Modern, elegant color scheme and styling"""
+    PRIMARY = "#0F62FE"        # Modern blue
+    SECONDARY = "#4589FF"      # Light blue
+    ACCENT = "#0353E9"         # Darker blue for hover
+    LIGHT = "#F8FAFB"          # Light blue-gray background
+    WHITE = "#FFFFFF"          # Pure white
+    TEXT_DARK = "#161616"      # Almost black
+    TEXT_LIGHT = "#525252"     # Medium gray
+    BORDER = "#E0E0E0"         # Light border
+    SUCCESS = "#24A148"        # Green for success states
+    WARNING = "#E87500"        # Orange for warnings
+    ERROR = "#DA1E28"          # Red for errors
 
     @staticmethod
     def configure_styles():
+        """Configure modern, elegant UI styles"""
         style = ttk.Style()
         style.theme_use('clam')
 
+        # Treeview with modern styling
         style.configure("Treeview",
                        background=ModernStyle.WHITE,
                        foreground=ModernStyle.TEXT_DARK,
                        fieldbackground=ModernStyle.WHITE,
                        borderwidth=0,
+                       rowheight=28,
                        font=('Segoe UI', 10))
         style.configure("Treeview.Heading",
                        background=ModernStyle.PRIMARY,
                        foreground=ModernStyle.WHITE,
                        font=('Segoe UI', 10, 'bold'),
-                       borderwidth=0)
+                       borderwidth=0,
+                       relief='flat')
         style.map('Treeview.Heading',
                  background=[('active', ModernStyle.SECONDARY)])
 
+        # Primary accent button - modern flat blue
         style.configure("Accent.TButton",
-                       background=ModernStyle.ACCENT,
+                       background=ModernStyle.PRIMARY,
                        foreground=ModernStyle.WHITE,
                        font=('Segoe UI', 10, 'bold'),
                        borderwidth=0,
                        focuscolor='none',
-                       padding=8)
+                       relief='flat',
+                       padding=(15, 8))
         style.map("Accent.TButton",
-                 background=[('active', ModernStyle.SECONDARY)])
+                 background=[('active', ModernStyle.ACCENT),
+                           ('pressed', ModernStyle.ACCENT)])
 
+        # Standard button - light gray
+        style.configure("TButton",
+                       background='#E0E0E0',
+                       foreground=ModernStyle.TEXT_DARK,
+                       font=('Segoe UI', 10),
+                       borderwidth=0,
+                       focuscolor='none',
+                       relief='flat',
+                       padding=(15, 8))
+        style.map("TButton",
+                 background=[('active', '#D0D0D0'),
+                           ('pressed', '#C0C0C0')])
+
+        # Frames and containers
         style.configure("TFrame", background=ModernStyle.LIGHT)
-        style.configure("TLabelframe",
-                       background=ModernStyle.LIGHT,
-                       foreground=ModernStyle.PRIMARY,
-                       borderwidth=2,
-                       relief="flat")
-        style.configure("TLabelframe.Label",
-                       background=ModernStyle.LIGHT,
-                       foreground=ModernStyle.PRIMARY,
-                       font=('Segoe UI', 10, 'bold'))
 
+        # Card-like label frames
+        style.configure("TLabelframe",
+                       background=ModernStyle.WHITE,
+                       foreground=ModernStyle.TEXT_DARK,
+                       borderwidth=1,
+                       relief="solid",
+                       bordercolor=ModernStyle.BORDER)
+        style.configure("TLabelframe.Label",
+                       background=ModernStyle.WHITE,
+                       foreground=ModernStyle.PRIMARY,
+                       font=('Segoe UI', 11, 'bold'))
+
+        # Labels
         style.configure("TLabel",
-                       background=ModernStyle.LIGHT,
+                       background=ModernStyle.WHITE,
                        foreground=ModernStyle.TEXT_DARK,
                        font=('Segoe UI', 10))
         style.configure("Header.TLabel",
                        font=('Segoe UI', 12, 'bold'),
                        foreground=ModernStyle.PRIMARY)
+
+        # Entry fields
+        style.configure("TEntry",
+                       fieldbackground=ModernStyle.WHITE,
+                       foreground=ModernStyle.TEXT_DARK,
+                       borderwidth=1,
+                       relief='solid')
 
 
 class ReportUpdater:
@@ -870,18 +905,20 @@ class SavingsApp:
             return []
 
     def create_header(self):
-        header = tk.Frame(self.root, bg=ModernStyle.PRIMARY, height=80)
+        """Create modern, elegant header with blue gradient feel"""
+        header = tk.Frame(self.root, bg=ModernStyle.PRIMARY, height=100)
         header.pack(fill="x", side="top")
         header.pack_propagate(False)
 
+        # Left section with logo
         logo_frame = tk.Frame(header, bg=ModernStyle.PRIMARY)
-        logo_frame.pack(side="left", padx=20, pady=10)
+        logo_frame.pack(side="left", padx=30, pady=15)
 
         logo_path = "costa_logo.png"
         if os.path.exists(logo_path):
             try:
                 img = Image.open(logo_path)
-                img = img.resize((60, 60), Image.Resampling.LANCZOS)
+                img = img.resize((70, 70), Image.Resampling.LANCZOS)
                 photo = ImageTk.PhotoImage(img)
                 logo_label = tk.Label(logo_frame, image=photo, bg=ModernStyle.PRIMARY)
                 logo_label.image = photo
@@ -892,38 +929,46 @@ class SavingsApp:
         else:
             self._create_logo_placeholder(logo_frame)
 
+        # Center section with title
         title_frame = tk.Frame(header, bg=ModernStyle.PRIMARY)
-        title_frame.pack(side="left", fill="both", expand=True, padx=10)
-        
-        tk.Label(title_frame, text="Savings Tracker Pro",
-                font=('Segoe UI', 20, 'bold'),
-                bg=ModernStyle.PRIMARY,
-                fg=ModernStyle.WHITE).pack(anchor="w")
-        tk.Label(title_frame, text="Global Sourcing Analytics",
-                font=('Segoe UI', 10),
-                bg=ModernStyle.PRIMARY,
-                fg=ModernStyle.LIGHT).pack(anchor="w")
+        title_frame.pack(side="left", fill="both", expand=True, padx=15)
 
-        stats_frame = tk.Frame(header, bg=ModernStyle.PRIMARY)
-        stats_frame.pack(side="right", padx=20)
-        
+        tk.Label(title_frame, text="💰 Savings Tracker Pro",
+                font=('Segoe UI', 24, 'bold'),
+                bg=ModernStyle.PRIMARY,
+                fg=ModernStyle.WHITE).pack(anchor="w", pady=(8, 0))
+        tk.Label(title_frame, text="Global Sourcing Analytics & Reporting",
+                font=('Segoe UI', 11),
+                bg=ModernStyle.PRIMARY,
+                fg="#B8D7FF").pack(anchor="w")
+
+        # Right section with stats card
+        stats_card = tk.Frame(header, bg="#FFFFFF", relief='flat')
+        stats_card.pack(side="right", padx=30, pady=20)
+
+        stats_inner = tk.Frame(stats_card, bg="#FFFFFF", padx=25, pady=12)
+        stats_inner.pack()
+
         project_count = len(self.project_manager.list_projects())
-        tk.Label(stats_frame, text=f"{project_count}",
-                font=('Segoe UI', 18, 'bold'),
-                bg=ModernStyle.PRIMARY,
-                fg=ModernStyle.ACCENT).pack()
-        tk.Label(stats_frame, text="Saved Projects",
+        tk.Label(stats_inner, text=str(project_count),
+                font=('Segoe UI', 22, 'bold'),
+                bg="#FFFFFF",
+                fg=ModernStyle.PRIMARY).pack()
+        tk.Label(stats_inner, text="Active Projects",
                 font=('Segoe UI', 9),
-                bg=ModernStyle.PRIMARY,
-                fg=ModernStyle.LIGHT).pack()
+                bg="#FFFFFF",
+                fg=ModernStyle.TEXT_LIGHT).pack()
 
     def _create_logo_placeholder(self, parent):
-        canvas = tk.Canvas(parent, width=60, height=60,
+        """Create modern circular logo placeholder"""
+        canvas = tk.Canvas(parent, width=70, height=70,
                           bg=ModernStyle.PRIMARY, highlightthickness=0)
         canvas.pack()
-        canvas.create_oval(15, 10, 45, 40, fill=ModernStyle.ACCENT, outline="")
-        canvas.create_arc(20, 25, 40, 55, start=0, extent=180,
-                         fill=ModernStyle.SECONDARY, outline="")
+        # Outer circle
+        canvas.create_oval(10, 10, 60, 60, fill="#FFFFFF", outline="")
+        # Inner dollar sign
+        canvas.create_text(35, 35, text="$", font=('Segoe UI', 28, 'bold'),
+                          fill=ModernStyle.PRIMARY)
 
     def create_menu_bar(self):
         menubar = tk.Menu(self.root)
@@ -1037,18 +1082,28 @@ class SavingsApp:
                       style=style, width=16).pack(side="left", padx=5)
 
     def create_status_bar(self):
-        status = tk.Frame(self.root, bg=ModernStyle.PRIMARY, height=25)
+        """Create modern status bar with sleek design"""
+        status = tk.Frame(self.root, bg=ModernStyle.PRIMARY, height=30)
         status.pack(fill="x", side="bottom")
-        
-        self.status_label = tk.Label(status, text="Ready",
+
+        self.status_label = tk.Label(status, text="✓ Ready",
                                      bg=ModernStyle.PRIMARY,
                                      fg=ModernStyle.WHITE,
-                                     font=('Segoe UI', 9),
-                                     anchor="w", padx=10)
-        self.status_label.pack(fill="x")
+                                     font=('Segoe UI', 10),
+                                     anchor="w", padx=15)
+        self.status_label.pack(side="left", fill="x", expand=True)
 
-    def update_status(self, message):
-        self.status_label.config(text=message)
+        # Version label
+        version_label = tk.Label(status, text="v2.0",
+                                bg=ModernStyle.PRIMARY,
+                                fg="#B8D7FF",
+                                font=('Segoe UI', 9),
+                                anchor="e", padx=15)
+        version_label.pack(side="right")
+
+    def update_status(self, message, icon="✓"):
+        """Update status bar with optional icon"""
+        self.status_label.config(text=f"{icon} {message}")
         self.root.update_idletasks()
 
     def new_project(self):
