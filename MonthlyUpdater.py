@@ -26,8 +26,8 @@ class ReportUpdater:
         self.hist_path = config.get("hist_file", "")
     
     def show_updater_dialog(self):
-        """Show the report updater dialog"""
-        
+        """Show the report updater dialog with modern, elegant UI"""
+
         # Validate historical file is set
         if not self.hist_path or not os.path.exists(self.hist_path):
             messagebox.showerror(
@@ -35,100 +35,164 @@ class ReportUpdater:
                 "Please set the Historical Data file in Settings before updating reports."
             )
             return
-        
+
+        # Modern color palette
+        colors = {
+            'bg': '#F8FAFB',           # Light blue-gray background
+            'card': '#FFFFFF',         # White cards
+            'primary': '#0F62FE',      # Modern blue
+            'primary_hover': '#0353E9',
+            'secondary': '#4589FF',    # Light blue
+            'success': '#24A148',      # Green
+            'text': '#161616',         # Dark text
+            'text_secondary': '#525252',
+            'border': '#E0E0E0',
+            'shadow': '#00000010'
+        }
+
         # Create dialog
         dialog = tk.Toplevel(self.parent)
-        dialog.title("Update Existing Report")
-        dialog.geometry("700x450")
-        dialog.configure(bg="#F5F9F3")
+        dialog.title("Update Report")
+        dialog.geometry("720x550")
+        dialog.configure(bg=colors['bg'])
         dialog.grab_set()
         dialog.transient(self.parent)
-        
-        # Header
-        header = tk.Frame(dialog, bg="#2D5016", height=70)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-        
-        tk.Label(header, text="🔄 Report Updater",
-                font=('Segoe UI', 18, 'bold'),
-                bg="#2D5016", fg="white").pack(pady=20)
-        
-        # Main content
-        content = tk.Frame(dialog, bg="#F5F9F3", padx=30, pady=20)
+
+        # Modern header with gradient effect
+        header_frame = tk.Frame(dialog, bg=colors['primary'], height=100)
+        header_frame.pack(fill="x")
+        header_frame.pack_propagate(False)
+
+        header_content = tk.Frame(header_frame, bg=colors['primary'])
+        header_content.pack(expand=True)
+
+        tk.Label(header_content, text="🔄",
+                font=('Segoe UI', 32),
+                bg=colors['primary'], fg="white").pack(pady=(5, 0))
+
+        tk.Label(header_content, text="Report Updater",
+                font=('Segoe UI', 22, 'bold'),
+                bg=colors['primary'], fg="white").pack()
+
+        tk.Label(header_content, text="Refresh your savings data with the latest information",
+                font=('Segoe UI', 10),
+                bg=colors['primary'], fg="#B8D7FF").pack(pady=(2, 5))
+
+        # Main scrollable content area
+        content = tk.Frame(dialog, bg=colors['bg'], padx=40, pady=25)
         content.pack(fill="both", expand=True)
-        
-        # Instructions
-        instructions = tk.Label(
-            content,
-            text="Update an existing savings report with the latest data from your historical file.\n"
-                 "This will refresh all quantities and savings without recreating the report.",
-            bg="#F5F9F3",
-            font=('Segoe UI', 10),
-            justify="left",
-            wraplength=620
-        )
-        instructions.pack(pady=(0, 20))
-        
-        # File selection
-        file_frame = tk.LabelFrame(content, text="Select Report to Update",
-                                  bg="#F5F9F3", font=('Segoe UI', 10, 'bold'),
-                                  padx=15, pady=15)
-        file_frame.pack(fill="x", pady=10)
-        
-        self.file_label = tk.Label(file_frame, text="No file selected",
-                                   bg="#F5F9F3", fg="gray",
-                                   font=('Segoe UI', 9))
-        self.file_label.pack(pady=5)
-        
-        tk.Button(file_frame, text="📂 Browse for Report",
-                 command=lambda: self.select_report(dialog),
-                 bg="#6B9F3E", fg="white",
-                 font=('Segoe UI', 10, 'bold'),
-                 padx=20, pady=8,
-                 cursor="hand2").pack(pady=5)
-        
-        # Options
-        options_frame = tk.LabelFrame(content, text="Update Options",
-                                     bg="#F5F9F3", font=('Segoe UI', 10, 'bold'),
-                                     padx=15, pady=15)
-        options_frame.pack(fill="x", pady=10)
-        
+
+        # File selection card
+        file_card = tk.Frame(content, bg=colors['card'], relief='flat', bd=0)
+        file_card.pack(fill="x", pady=(0, 15))
+
+        # Card shadow effect
+        file_card_inner = tk.Frame(file_card, bg=colors['card'], padx=25, pady=20)
+        file_card_inner.pack(fill="x", padx=1, pady=1)
+
+        tk.Label(file_card_inner, text="📁 Select Report File",
+                font=('Segoe UI', 12, 'bold'),
+                bg=colors['card'], fg=colors['text']).pack(anchor="w", pady=(0, 10))
+
+        # File path display
+        file_display_frame = tk.Frame(file_card_inner, bg='#F4F4F4', relief='flat')
+        file_display_frame.pack(fill="x", pady=(0, 12))
+
+        self.file_label = tk.Label(file_display_frame, text="No file selected",
+                                   bg='#F4F4F4', fg=colors['text_secondary'],
+                                   font=('Segoe UI', 10), anchor='w', padx=15, pady=12)
+        self.file_label.pack(fill="x")
+
+        # Browse button
+        browse_btn = tk.Button(file_card_inner, text="Browse Files",
+                              command=lambda: self.select_report(dialog),
+                              bg=colors['secondary'], fg="white",
+                              font=('Segoe UI', 10, 'bold'),
+                              relief='flat', bd=0,
+                              padx=25, pady=10,
+                              cursor="hand2",
+                              activebackground=colors['primary'])
+        browse_btn.pack(anchor="w")
+
+        # Options card
+        options_card = tk.Frame(content, bg=colors['card'], relief='flat', bd=0)
+        options_card.pack(fill="x", pady=(0, 15))
+
+        options_card_inner = tk.Frame(options_card, bg=colors['card'], padx=25, pady=20)
+        options_card_inner.pack(fill="x", padx=1, pady=1)
+
+        tk.Label(options_card_inner, text="⚙️ Update Mode",
+                font=('Segoe UI', 12, 'bold'),
+                bg=colors['card'], fg=colors['text']).pack(anchor="w", pady=(0, 12))
+
         self.update_all_var = tk.BooleanVar(value=True)
         self.update_empty_var = tk.BooleanVar(value=False)
-        
-        tk.Radiobutton(options_frame, text="Update ALL months (recommended)",
+
+        # Radio button options
+        radio_frame1 = tk.Frame(options_card_inner, bg=colors['card'])
+        radio_frame1.pack(fill="x", pady=3)
+
+        tk.Radiobutton(radio_frame1, text="Update ALL months",
                       variable=self.update_all_var, value=True,
-                      bg="#F5F9F3", font=('Segoe UI', 9),
-                      command=lambda: self.update_empty_var.set(False)).pack(anchor="w", pady=2)
-        
-        tk.Radiobutton(options_frame, text="Update only empty months",
+                      bg=colors['card'], fg=colors['text'],
+                      font=('Segoe UI', 10),
+                      activebackground=colors['card'],
+                      selectcolor=colors['card'],
+                      command=lambda: self.update_empty_var.set(False)).pack(side="left")
+
+        tk.Label(radio_frame1, text="(Recommended - Refreshes all data)",
+                bg=colors['card'], fg=colors['text_secondary'],
+                font=('Segoe UI', 9, 'italic')).pack(side="left", padx=(8, 0))
+
+        radio_frame2 = tk.Frame(options_card_inner, bg=colors['card'])
+        radio_frame2.pack(fill="x", pady=3)
+
+        tk.Radiobutton(radio_frame2, text="Update only empty months",
                       variable=self.update_empty_var, value=True,
-                      bg="#F5F9F3", font=('Segoe UI', 9),
-                      command=lambda: self.update_all_var.set(False)).pack(anchor="w", pady=2)
-        
-        # Status
-        self.status_label = tk.Label(content, text="Ready to update",
-                                     bg="#F5F9F3", fg="#2D5016",
-                                     font=('Segoe UI', 9, 'italic'))
-        self.status_label.pack(pady=10)
-        
-        # Buttons
-        btn_frame = tk.Frame(content, bg="#F5F9F3")
-        btn_frame.pack(pady=10)
-        
-        tk.Button(btn_frame, text="▶️ Update Report",
-                 command=lambda: self.run_update(dialog),
-                 bg="#2D5016", fg="white",
-                 font=('Segoe UI', 11, 'bold'),
-                 padx=30, pady=10,
-                 cursor="hand2").pack(side="left", padx=5)
-        
-        tk.Button(btn_frame, text="Cancel",
-                 command=dialog.destroy,
-                 bg="#999999", fg="white",
-                 font=('Segoe UI', 10),
-                 padx=20, pady=10,
-                 cursor="hand2").pack(side="left", padx=5)
+                      bg=colors['card'], fg=colors['text'],
+                      font=('Segoe UI', 10),
+                      activebackground=colors['card'],
+                      selectcolor=colors['card'],
+                      command=lambda: self.update_all_var.set(False)).pack(side="left")
+
+        tk.Label(radio_frame2, text="(Only fills in missing data)",
+                bg=colors['card'], fg=colors['text_secondary'],
+                font=('Segoe UI', 9, 'italic')).pack(side="left", padx=(8, 0))
+
+        # Status indicator
+        status_frame = tk.Frame(content, bg='#E8F5E9', relief='flat')
+        status_frame.pack(fill="x", pady=(0, 20))
+
+        self.status_label = tk.Label(status_frame, text="✓ Ready to update",
+                                     bg='#E8F5E9', fg=colors['success'],
+                                     font=('Segoe UI', 10), pady=12)
+        self.status_label.pack()
+
+        # Action buttons
+        btn_frame = tk.Frame(content, bg=colors['bg'])
+        btn_frame.pack(pady=5)
+
+        # Update button
+        update_btn = tk.Button(btn_frame, text="Update Report",
+                              command=lambda: self.run_update(dialog),
+                              bg=colors['primary'], fg="white",
+                              font=('Segoe UI', 11, 'bold'),
+                              relief='flat', bd=0,
+                              padx=35, pady=12,
+                              cursor="hand2",
+                              activebackground=colors['primary_hover'])
+        update_btn.pack(side="left", padx=5)
+
+        # Cancel button
+        cancel_btn = tk.Button(btn_frame, text="Cancel",
+                              command=dialog.destroy,
+                              bg='#E0E0E0', fg=colors['text'],
+                              font=('Segoe UI', 10),
+                              relief='flat', bd=0,
+                              padx=30, pady=12,
+                              cursor="hand2",
+                              activebackground='#D0D0D0')
+        cancel_btn.pack(side="left", padx=5)
     
     def select_report(self, dialog):
         """Select existing report file"""
@@ -137,39 +201,65 @@ class ReportUpdater:
             filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
             parent=dialog
         )
-        
+
         if path:
             self.report_path = path
-            self.file_label.config(text=os.path.basename(path), fg="black")
-            self.status_label.config(text=f"Report loaded: {os.path.basename(path)}")
-    
+            filename = os.path.basename(path)
+            # Truncate long filenames
+            display_name = filename if len(filename) <= 50 else filename[:47] + "..."
+            self.file_label.config(text=display_name, fg='#161616')
+            self.status_label.config(
+                text=f"✓ File selected: {filename}",
+                bg='#E8F5E9',
+                fg='#24A148'
+            )
+
     def run_update(self, dialog):
         """Execute the report update"""
-        
+
         if not self.report_path:
-            messagebox.showerror("No File", "Please select a report to update.", parent=dialog)
+            messagebox.showerror("No File Selected",
+                               "Please select a report file to update.",
+                               parent=dialog)
             return
-        
-        self.status_label.config(text="Updating report...")
+
+        # Show processing status
+        self.status_label.config(
+            text="⏳ Processing update... Please wait",
+            bg='#FFF4E5',
+            fg='#E87500'
+        )
         dialog.update()
-        
+
         try:
             success = self.update_report(self.update_all_var.get())
-            
+
             if success:
                 messagebox.showinfo(
-                    "Update Complete",
-                    f"Report updated successfully!\n\n"
-                    f"Updated file saved with '_Updated' suffix.",
+                    "✓ Update Complete",
+                    "Your report has been successfully updated!\n\n"
+                    "The updated file has been saved with an '_Updated' suffix "
+                    "and timestamp in the same directory.",
                     parent=dialog
                 )
                 dialog.destroy()
             else:
-                self.status_label.config(text="Update failed - see error message")
-                
+                self.status_label.config(
+                    text="✗ Update failed - check error message above",
+                    bg='#FFE8E8',
+                    fg='#DA1E28'
+                )
+
         except Exception as e:
-            messagebox.showerror("Update Error", f"Failed to update report:\n{str(e)}", parent=dialog)
-            self.status_label.config(text="Update failed")
+            error_msg = str(e)
+            messagebox.showerror("Update Error",
+                               f"Failed to update report:\n\n{error_msg}",
+                               parent=dialog)
+            self.status_label.config(
+                text="✗ Update failed - see error details",
+                bg='#FFE8E8',
+                fg='#DA1E28'
+            )
     
     def update_report(self, update_all=True):
         """
