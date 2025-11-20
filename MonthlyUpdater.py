@@ -246,33 +246,85 @@ class ReportUpdater:
         month_cols = {}  # {column_index: month_name}
         qty_section_start = None
         save_section_start = None
-        
+
+        print("\nScanning for sections...")
         for row_idx in range(1, ws.max_row + 1):
-            cell_value = ws.cell(row=row_idx, column=1).value
-            
-            if cell_value:
-                if "QUANTITIES" in str(cell_value).upper():
+            # Check first few columns for section headers (handles merged cells)
+            cell_text = None
+            for col_check in range(1, min(5, ws.max_column + 1)):
+                cell_value = ws.cell(row=row_idx, column=col_check).value
+                if cell_value and str(cell_value).strip():
+                    cell_text = str(cell_value).strip().upper()
+                    break
+
+            if cell_text:
+                # More flexible pattern matching
+                if "QUANTITIES" in cell_text or "QUANTITY" in cell_text:
                     qty_section_start = row_idx + 1  # Header is next row
-                elif "SAVINGS" in str(cell_value).upper() and "REALIZED" in str(cell_value).upper():
+                    print(f"  Found QUANTITIES section at row {row_idx}")
+                elif ("SAVINGS" in cell_text and "REALIZED" in cell_text) or "REALIZED SAVINGS" in cell_text:
                     save_section_start = row_idx + 1
-        
+                    print(f"  Found SAVINGS section at row {row_idx}")
+
+        if not qty_section_start or not save_section_start:
+            print(f"  ⚠️ Section detection failed: qty_section_start={qty_section_start}, save_section_start={save_section_start}")
+            messagebox.showerror("Parse Error",
+                "Could not find QUANTITIES and SAVINGS sections.\n\n"
+                "Please ensure your report has:\n"
+                "- A 'QUANTITIES RECEIVED' section\n"
+                "- A 'REALIZED SAVINGS' section")
+            return False
+
         # Get month columns from quantities header
         if qty_section_start:
             for col_idx in range(1, ws.max_column + 1):
                 header = ws.cell(row=qty_section_start, column=col_idx).value
-                if header and header not in ["Product", "Total Qty", "Total"]:
+                if header and str(header).strip() not in ["Product", "Total Qty", "Total", ""]:
                     # This is a month column (e.g., "JAN 25", "FEB 25")
-                    month_cols[col_idx] = str(header)
-        
+                    month_cols[col_idx] = str(header).strip()
+
         print(f"Found {len(month_cols)} month columns: {list(month_cols.values())}")
-        
-        if not qty_section_start or not save_section_start:
-            messagebox.showerror("Parse Error", "Could not find QUANTITIES and SAVINGS sections.")
-            return False
-        
+
+        # Collect all unique months from ALL products first
+        print("\nCollecting all months from historical data...")
+        all_required_months = set()
+        for product_info in products:
+            product = product_info['product_code']
+            product_hist = hist[hist["ProductCode"] == product].copy()
+
+            if not product_hist.empty:
+                product_hist["YearMonth"] = product_hist["ReceiptDate"].dt.to_period("M")
+                monthly_data = product_hist.groupby("YearMonth").agg(
+                    Qty=("BaseRcvdQty", "sum")
+                ).reset_index()
+
+                for period in monthly_data["YearMonth"]:
+                    month_abbr = calendar.month_abbr[period.month].upper()
+                    year_short = str(period.year)[-2:]
+                    month_label = f"{month_abbr} {year_short}"
+                    all_required_months.add(month_label)
+
+        print(f"Found {len(all_required_months)} unique months in historical data")
+
+        # Ensure all required month columns exist BEFORE processing
+        if all_required_months:
+            print("Ensuring all month columns exist...")
+            for month_label in sorted(all_required_months):
+                self.ensure_month_column(ws, qty_section_start, month_label)
+                self.ensure_month_column(ws, save_section_start, month_label)
+
+            # Rebuild month_cols mapping after all insertions
+            month_cols = {}
+            for col_idx in range(1, ws.max_column + 1):
+                header = ws.cell(row=qty_section_start, column=col_idx).value
+                if header and str(header).strip() not in ["Product", "Total Qty", "Total", ""]:
+                    month_cols[col_idx] = str(header).strip()
+
+            print(f"Final month columns: {list(month_cols.values())}")
+
         # Update each product's data
         updates_made = 0
-        
+
         for product_info in products:
             product = product_info['product_code']
             compare = product_info['compare_code']
@@ -296,28 +348,6 @@ class ReportUpdater:
             
             # Calculate savings per unit
             savings_per_unit = old_price - new_price
-
-            # Collect all unique months from historical data for this product
-            all_months = set()
-            for period in monthly_data["YearMonth"]:
-                month_abbr = calendar.month_abbr[period.month].upper()
-                year_short = str(period.year)[-2:]
-                month_label = f"{month_abbr} {year_short}"
-                all_months.add(month_label)
-
-            # Ensure all required month columns exist
-            for month_label in all_months:
-                # Ensure column exists in QUANTITIES section
-                self.ensure_month_column(ws, qty_section_start, month_label)
-                # Ensure column exists in SAVINGS section
-                self.ensure_month_column(ws, save_section_start, month_label)
-
-            # Rebuild month_cols mapping after potential insertions
-            month_cols = {}
-            for col_idx in range(1, ws.max_column + 1):
-                header = ws.cell(row=qty_section_start, column=col_idx).value
-                if header and header not in ["Product", "Total Qty", "Total"]:
-                    month_cols[col_idx] = str(header)
 
             # Update each month column
             update_empty = not update_all
